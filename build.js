@@ -37,3 +37,9 @@ targetFiles.forEach((filePath) => {
     console.warn(`⚠️  File not found: ${filePath}`);
   }
 });
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
+
+console.log('If you see this, build.js ran successfully.');
