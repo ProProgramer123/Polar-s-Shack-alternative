@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polar's Shack</title>
+    <link id="favicon" rel="icon" href="../logo.png" type="image/png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156548662984796"
+     crossorigin="anonymous"></script>
+      <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <script defer data-domain="https://polars-shack.vercel.app" src="https://analytics.vercel-insights.com/script.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #888;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #1a1a1a;
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-nav img {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+        }
+
+        .logo-nav span {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #888;
+            text-decoration: none;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #00ff00;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            padding: 1rem 2rem;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu a {
+            display: block;
+            color: #888;
+            text-decoration: none;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #333;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu a:hover, .mobile-menu a.active {
+            color: #00ff00;
+        }
+
+        .mobile-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: clamp(2rem, 6vw, 2.5rem);
+            font-weight: 400;
+            margin-bottom: 1rem;
+            color: #fff;
+            position: relative;
+        }
+
+        .page-header h1::after {
+            content: '_';
+            color: #00ff00;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        .page-header p {
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            color: #666;
+            max-width: 600px;
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #888;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .search-input:focus {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .games-stats {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .games-count {
+            font-size: 2rem;
+            color: #00ff00;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .games-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .game-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .game-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .game-image.placeholder {
+            background: linear-gradient(135deg, #333, #444);
+            color: #666;
+            font-size: 3rem;
+        }
+
+        .game-info {
+            padding: 1.5rem;
+        }
+
+        .game-title {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .game-description {
+            color: #666;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .play-btn {
+            flex: 1;
+            background: #00ff00;
+            color: #1a1a1a;
+            border: 1px solid #00ff00;
+            padding: 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .play-btn:hover {
+            background: #00cc00;
+        }
+
+        .report-btn {
+            background: #444;
+            color: #888;
+            border: 1px solid #555;
+            padding: 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .report-btn:hover {
+            background: #555;
+            color: #ff6666;
+            border-color: #ff6666;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+            margin: 3rem 0;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .main-content {
+                padding: 1rem;
+                margin-top: 70px;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .game-image {
+                height: 140px;
+            }
+
+            .game-info {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <link rel="stylesheet" href="tospopup.css">
+<script src="tospopup.js" defer></script>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-nav">
+                <img src="../logo.png" alt="Logo">
+                <span>polar's.shack</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">home</a></li>
+                <li><a href="osint.html">osint</a></li>
+                <li><a href="csint.html">csint</a></li>
+                <li><a href="tools.html">tools</a></li>
+                <li><a href="games.html" class="active">games</a></li>
+                <li><a href="apps.html">apps</a></li>
+                <li><a href="proxy.html">proxy</a></li>
+                <li><a href="chat.html">chat</a></li>
+            </ul>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class='bx bx-menu'></i>
+            </button>
+        </div>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">home</a>
+            <a href="osint.html">osint</a>
+            <a href="csint.html">csint</a>
+            <a href="tools.html">tools</a>
+            <a href="games.html" class="active">games</a>
+            <a href="apps.html">apps</a>
+            <a href="proxy.html">proxy</a>
+            <a href="chat.html">chat</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="page-header">
+            <h1>game library</h1>
+            <p>discover and play from our extensive collection of games. from classics to modern hits, find your next favorite game.</p>
+        </section>
+
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="search games...">
+            <i class='bx bx-search search-icon'></i>
+        </div>
+
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156548662984796"
+     crossorigin="anonymous"></script>
+<!-- Bottom Page and Top -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9156548662984796"
+     data-ad-slot="4983519621"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+        <div class="games-stats">
+            <div class="games-count" id="gamesCount">120+</div>
+            <div class="games-label">games available</div>
+        </div>
+
+        <section class="games-grid" id="gamesGrid">
+            <!-- Games will be populated here -->
+        </section>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            no games found matching your search.
+        </div>
+    </main>
+
+    <!-- Firebase scripts here first -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<!-- Import analytics.js -->
+<script src="analytics.js"></script>
+<script>
+  // Call it once when the page loads
+  initAnalytics();
+</script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYyJuTAkVPB_65NqSeca6IueMoMO1iPzs",
+            authDomain: "polars-shack.firebaseapp.com",
+            projectId: "polars-shack",
+            storageBucket: "polars-shack.firebasestorage.app",
+            messagingSenderId: "205388124682",
+            appId: "1:205388124682:web:2b0b1605517e0c6c53c5f3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+    
+    <script>    
+        const games = [
+            { name: "1v1.lol", url: "https://storage.googleapis.com/test-41376.appspot.com/1.html", icon: "https://th.bing.com/th/id/R.23c1cb7d41a5475776fc3186ead79f20?rik=XpxnUj55%2bqpiUA&pid=ImgRaw&r=0", description: "Battle royale building game with 1v1 combat" },
+            { name: "Request a Game", url: "https://forms.gle/ZE1q6vJyXwSsQ4EQ9", icon: "https://cdn-icons-png.flaticon.com/512/2003/2003257.png", description: "Request your favorite game to be added" },
+            { name: "Basket Random", url: "https://ubg-reborn-eosin.vercel.app/games/basket-random/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/basket-random/splash.jpeg", description: "Wacky basketball game with random physics" },
+            { name: "Bitlife", url: "https://ubg-reborn-eosin.vercel.app/games/bitlife/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bitlife/splash.png", description: "Life simulation game with choices and consequences" },
+            { name: "Cluster Rush", url: "https://ubg-reborn-eosin.vercel.app/games/cluster-rush/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/cluster-rush/icon.jpg", description: "Fast-paced truck jumping adventure" },
+            { name: "Tunnel Rush", url: "https://ubg-reborn-eosin.vercel.app/games/tunnel-rush/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/tunnel-rush/img/tunnel.jpg", description: "High-speed tunnel racing game" },
+            { name: "Slope", url: "https://ubg-reborn-eosin.vercel.app/games/slope/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/slope/slope4.jpeg", description: "Roll down the slope and avoid obstacles" },
+            { name: "Drive Mad", url: "https://ubg-reborn-eosin.vercel.app/games/drive-mad/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/drive-mad/logo.jpg", description: "Crazy driving game with challenging levels" },
+            { name: "Madalin Stunt Cars 3", url: "https://ubg-reborn-eosin.vercel.app/games/madalin-stunt-cars-3/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/madalin-stunt-cars-3/img/index.jpg", description: "Multiplayer stunt car racing" },
+            { name: "Minecraft", url: "https://ubg-reborn-eosin.vercel.app/games/eaglerjp/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/eaglerjp/favicon.ico", description: "Block-building sandbox adventure" },
+            { name: "Gunspin", url: "https://rm.gmsgroup.app/misc/gunspin", icon: "https://ubg-reborn-eosin.vercel.app/help.png", description: "Physics-based gun spinning game" },
+            { name: "Tetris", url: "https://ubg-reborn-eosin.vercel.app/games/twitch-tetris/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/twitch-tetris/logo.png", description: "Classic block-stacking puzzle game" },
+            { name: "Rooftop Snipers", url: "https://ubg-reborn-eosin.vercel.app/games/rooftop-snipers/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/rooftop-snipers/img/thumb.png", description: "Pixel sniper dueling game" },
+            { name: "Getaway Shootout", url: "https://ubg-reborn-eosin.vercel.app/games/getaway-shootout/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/getaway-shootout/img/index.jpg", description: "Chaotic multiplayer racing shooter" },
+            { name: "Drift Boss", url: "https://rm.gmsgroup.app/misc/drift-boss/", icon: "https://ubg-reborn-eosin.vercel.app/help.png", description: "Master the art of drifting" },
+            { name: "KARLSONT", url: "https://rm.gmsgroup.app/misc/karlsont", icon: "https://ubg-reborn-eosin.vercel.app/help.png", description: "Fast-paced parkour adventure" },
+            { name: "MotoX3M", url: "https://ubg-reborn-eosin.vercel.app/games/motox3m/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/motox3m/splash.jpg", description: "Extreme motocross stunts and racing" },
+            { name: "NGon", url: "https://ubg-reborn-eosin.vercel.app/games/n-gon/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/n-gon/favicon.ico", description: "Physics-based platformer puzzle" },
+            { name: "A Dance of Fire & Ice", url: "https://ubg-reborn-eosin.vercel.app/games/a-dance-of-fire-and-ice/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/a-dance-of-fire-and-ice/splash.png", description: "Rhythm game with geometric patterns" },
+            { name: "COD Zombies", url: "https://node-unblock.vercel.app/proxy/https://nzp.gay", icon: "https://ubg-reborn-eosin.vercel.app/games/cod-zombies.png", description: "Survive waves of zombies" },
+            { name: "Shell Shockers", url: "https://ubg-reborn-eosin.vercel.app/games/shellshockers/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/shellshockers/img/favicon.png", description: "Multiplayer egg shooter game" },
+            { name: "Roblox", url: "https://ubg-reborn-eosin.vercel.app/error/roblox/index.html", icon: "https://ubg-reborn-eosin.vercel.app/error/roblox/UPDATED.png", description: "Create and play in virtual worlds" },
+            { name: "Yohoho.io", url: "https://rm.gmsgroup.app/misc/yohoho/index.html", icon: "https://rm.gmsgroup.app/misc/yohoho/favicon/android-chrome-512x512.png", description: "Pirate battle royale game" },
+            { name: "Block Blast", url: "https://rm.gmsgroup.app/misc/block-blast/", icon: "https://rm.gmsgroup.app/img/games/blockblast.webp", description: "Addictive block puzzle game" },
+            { name: "Emulator", url: "https://rm.gmsgroup.app/misc/emulator/emulatorjs/index.html", icon: "https://rm.gmsgroup.app/misc/emulator/emulatorjs/logo.png", description: "Play retro console games" },
+            { name: "House of Hazards", url: "https://rm.gmsgroup.app/misc/houseofhazards/", icon: "https://rm.gmsgroup.app/misc/houseofhazards/img.jpeg", description: "Multiplayer party game with traps" },
+            { name: "Super Mario 64", url: "https://rm.gmsgroup.app/misc/sm64/index.html", icon: "https://rm.gmsgroup.app/misc/sm64/img.png", description: "Classic 3D Mario platformer" },
+            { name: "Space Company", url: "https://node-unblock.vercel.app/proxy/https:/sparticle999.github.io/SpaceCompany/", icon: "https://rm.gmsgroup.app/img/games/space.webp", description: "Space exploration and management" },
+            { name: "Gameboy Advance", url: "https://real-sgs.vercel.app/Tools/GBA-Emulator/index.html", icon: "https://rm.gmsgroup.app/img/games/gba.webp", description: "Play GBA games in browser" },
+            { name: "Drift Hunters", url: "https://rm.gmsgroup.app/misc/drift-hunters/", icon: "https://rm.gmsgroup.app/img/games/drifthunters.webp", description: "Professional drift racing simulator" },
+            { name: "Funny Shooter 2", url: "https://rm.gmsgroup.app/misc/funny-shooter-2/index.html", icon: "https://rm.gmsgroup.app/misc/funny-shooter-2/img.jpeg", description: "Humorous first-person shooter" },
+            { name: "WORDLE Unlimited", url: "https://node-unblock.vercel.app/proxy/https:/wordleunlimited.org/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbqPp3MlsnWx17e_TErv3XqzNad2WKskbYaQ&s", description: "Unlimited word guessing puzzle" },
+            { name: "Retro Bowl", url: "https://node-unblock.vercel.app/proxy/https:/game316009.konggames.com/gamez/0031/6009/live/index.html", icon: "https://ubg-reborn-eosin.vercel.app/images/retrobowl.png", description: "Retro-style American football" },
+            { name: "Bad Time Simulator", url: "https://node-unblock.vercel.app/proxy/https:/jcw87.github.io/c2-sans-fight/", icon: "https://www.freeiconspng.com/thumbs/sans-undertale-icon/sans-undertale-icon-29.png", description: "Undertale Sans boss fight" },
+            { name: "Paper.Io 2", url: "https://rm.gmsgroup.app/misc/paperio2/index.html", icon: "https://rm.gmsgroup.app/misc/paperio2/images/icon512.png", description: "Territory conquest multiplayer game" },
+            { name: "Scratch", url: "https://node-unblock.vercel.app/proxy/https:/scratch.mit.edu/", icon: "https://www.aisd.net/wp-content/files/Scratch-Logo.png", description: "Visual programming platform" },
+            { name: "Basketball Stars", url: "https://node-unblock.vercel.app/proxy/https:/basketballstars-game.io/game/basketball-stars/", icon: "https://node-unblock.vercel.app/proxy/https:/basketball-stars.io/upload/cache/upload/imgs/basketball-stars1-m240x240.jpg", description: "Street basketball multiplayer" },
+            { name: "Super Hot", url: "https://ubg-reborn-eosin.vercel.app/games/superhot/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/superhot/hot.jpg", description: "Time moves only when you move" },
+            { name: "Smash Karts", url: "https://ubg-reborn-eosin.vercel.app/games/smashkarts/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/smashkarts/images/icon-512.png", description: "Multiplayer kart racing battle" },
+            { name: "Sandboxels", url: "https://ubg-reborn-eosin.vercel.app/games/sandboxels/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/sandboxels/icons/apple-touch-icon.png", description: "Physics sandbox with elements" },
+            { name: "JustFall.lol", url: "https://ubg-reborn-eosin.vercel.app/games/just-fall/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/just-fall/unnamed.png", description: "Multiplayer falling platform game" },
+            { name: "Snow Rider 3D", url: "https://ubg-reborn-eosin.vercel.app/games/snowrider3d/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/snowrider3d/favicon.ico", description: "3D snowboarding adventure" },
+            { name: "Among Us", url: "https://ubg-reborn-eosin.vercel.app/games/among-us/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/among-us/red.png", description: "Social deduction party game" },
+            { name: "Subway Surfers", url: "https://ubg-reborn-eosin.vercel.app/games/subway-surfers/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/subway-surfers/img/splash.jpg", description: "Endless running adventure" },
+            { name: "Stickman Hook", url: "https://ubg-reborn-eosin.vercel.app/games/stickman-hook/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/stickman-hook/unnamed.jpg", description: "Swing through levels with physics" },
+            { name: "Stick War", url: "https://ubg-reborn-eosin.vercel.app/games/stickwar/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/stickwar/stickwar.jpg", description: "Strategic stick figure warfare" },
+            { name: "Riddle School", url: "https://ubg-reborn-eosin.vercel.app/games/riddleschool/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/riddleschool/riddleschool.png", description: "Point-and-click adventure puzzle" },
+            { name: "Synesthesia", url: "https://ubg-reborn-eosin.vercel.app/games/synesthesia/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/synesthesia/index.icon.png", description: "Musical rhythm and color game" },
+            { name: "Temple Run 2", url: "https://ubg-reborn-eosin.vercel.app/games/temple-run-2/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/temple-run-2/img/og-icon.png", description: "Endless temple running adventure" },
+            { name: "There Is No Game", url: "https://ubg-reborn-eosin.vercel.app/games/there-is-no-game/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/there-is-no-game/logo.png", description: "Meta puzzle game that breaks rules" },
+            { name: "This Is The Only Level", url: "https://ubg-reborn-eosin.vercel.app/games/thisistheonlylevel/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/thisistheonlylevel/thisistheonlylevel.png", description: "One level, many variations" },
+            { name: "Tiny Fishing", url: "https://ubg-reborn-eosin.vercel.app/games/tiny-fishing/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/tiny-fishing/thumb.png", description: "Relaxing fishing simulation" },
+            { name: "CSGO Clicker", url: "https://ubg-reborn-eosin.vercel.app/games/csgo-clicker/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/csgo-clicker/images/case1.png", description: "Counter-Strike case opening clicker" },
+            { name: "Elastic Man", url: "https://ubg-reborn-eosin.vercel.app/games/elasticman/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/elasticman/elasticman.jpg", description: "Stretch and play with elastic face" },
+            { name: "Hardware Tycoon", url: "https://ubg-reborn-eosin.vercel.app/games/hardware-tycoon/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/hardware-tycoon/icon-256.png", description: "Build your tech empire" },
+            { name: "Pixel Gun Survival", url: "https://ubg-reborn-eosin.vercel.app/games/pixel-gun-survival/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/pixel-gun-survival/512x512.png", description: "Pixelated survival shooter" },
+            { name: "Precision Client", url: "https://ubg-reborn-eosin.vercel.app/games/precision-client/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/precision-client/logo.png", description: "Minecraft client with mods" },
+            { name: "Jetpack Joyride", url: "https://ubg-reborn-eosin.vercel.app/games/jetpack-joyride/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/jetpack-joyride/splash.jpg", description: "Jetpack-powered endless runner" },
+            { name: "Minesweeper", url: "https://ubg-reborn-eosin.vercel.app/games/minesweeper/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/minesweeper/img/minesweeper.png", description: "Classic mine detection puzzle" },
+            { name: "Moto X3M Pool", url: "https://ubg-reborn-eosin.vercel.app/games/motox3m-pool/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/motox3m-pool/splash.jpg", description: "Pool-themed motocross stunts" },
+            { name: "Out of Ctrl", url: "https://ubg-reborn-eosin.vercel.app/games/out-of-ctrl/OutOfCtrl_v1_2/index.html", icon: "https://i1.sndcdn.com/avatars-Ry380jnh8jcA2TBZ-Vipx8Q-t1080x1080.jpg", description: "Control-defying puzzle platformer" },
+            { name: "Overwatch", url: "https://ubg-reborn-eosin.vercel.app/games/overwatch/overwatch.html", icon: "https://ubg-reborn-eosin.vercel.app/games/overwatch/98FBAD0A-F63A-46B5-81E7-0D3074D23365.jpeg", description: "Team-based hero shooter" },
+            { name: "Rocket League", url: "https://nullifys-corner-rocket-league.vercel.app/index.html", icon: "https://nullifys-corner-rocket-league.vercel.app/splash.png", description: "Soccer with rocket-powered cars" },
+            { name: "Trimps", url: "https://ubg-reborn-eosin.vercel.app/games/Trimps/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/Trimps/favicon.ico", description: "Incremental strategy game" },
+            { name: "A Dark Room", url: "https://ubg-reborn-eosin.vercel.app/games/adarkroom/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/adarkroom/splash.png", description: "Text-based survival adventure" },
+            { name: "Astray", url: "https://ubg-reborn-eosin.vercel.app/games/astray/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/astray/splash.png", description: "Atmospheric puzzle adventure" },
+            { name: "Amazing Rope Police", url: "https://ubg-reborn-eosin.vercel.app/games/amazing-rope-police/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/amazing-rope-police/splash.jpeg", description: "Superhero rope swinging action" },
+            { name: "Bacon May Die", url: "https://ubg-reborn-eosin.vercel.app/games/bacon-may-die/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bacon-may-die/splash.png", description: "Bacon-themed beat 'em up" },
+            { name: "Baldis Basics", url: "https://ubg-reborn-eosin.vercel.app/games/baldis-basics/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/baldis-basics/splash.png", description: "Educational horror parody game" },
+            { name: "1v1space", url: "https://ubg-reborn-eosin.vercel.app/games/1v1space/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/1v1space/splash.png", description: "Space-themed 1v1 battles" },
+            { name: "Hex GL", url: "https://ubg-reborn-eosin.vercel.app/games/HexGL/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/HexGL/icon_256.png", description: "Futuristic racing game" },
+            { name: "Monkey Mart", url: "https://ubg-reborn-eosin.vercel.app/games/MonkeyMart/index.html", icon: "https://play-lh.googleusercontent.com/rWReIdyvDaYJPeOxn7hbC0b-96ixGpQKM_EndiQa3SUME8TtI_rNUcI4qsw5teK9mqk", description: "Manage your monkey marketplace" },
+            { name: "Ages of Conflict", url: "https://ubg-reborn-eosin.vercel.app/games/ages-of-conflict/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/ages-of-conflict/splash.jpg", description: "Historical warfare strategy" },
+            { name: "Ballistic Chickens", url: "https://ubg-reborn-eosin.vercel.app/games/ballistic-chickens/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/ballistic-chickens/logo.png", description: "Physics-based chicken launcher" },
+            { name: "Doom", url: "https://ubg-reborn-eosin.vercel.app/games/doom/doom.html", icon: "https://ubg-reborn-eosin.vercel.app/games/doom/0B894474-D070-4E9C-B1C1-6908E344DA28.jpeg", description: "Classic demon-slaying FPS" },
+            { name: "Doublewires", url: "https://ubg-reborn-eosin.vercel.app/games/doublewires/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/doublewires/doublewires.png", description: "Wire-based puzzle platformer" },
+            { name: "Eel Slap", url: "https://ubg-reborn-eosin.vercel.app/games/eel-slap/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/eel-slap/eel-slap.png", description: "Slap with an eel simulator" },
+            { name: "Evil Glitch", url: "https://ubg-reborn-eosin.vercel.app/games/evil-glitch/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/evil-glitch/evil.png", description: "Glitchy horror platformer" },
+            { name: "Idle Dices", url: "https://ubg-reborn-eosin.vercel.app/games/idledices/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/idledices/images/icon256.png", description: "Dice-rolling idle game" },
+            { name: "Missiles", url: "https://ubg-reborn-eosin.vercel.app/games/missiles/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/missiles/miss.png", description: "Missile defense strategy" },
+            { name: "Snowbattle.io", url: "https://ubg-reborn-eosin.vercel.app/games/snowbattle/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/snowbattle/img/logo.png", description: "Multiplayer snowball fight" },
+            { name: "Stack", url: "https://ubg-reborn-eosin.vercel.app/games/stack/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/stack/stack.png", description: "Perfect block stacking game" },
+            { name: "Spinning Rat", url: "https://ubg-reborn-eosin.vercel.app/games/spinningrat/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/spinningrat/favicon-32x32.png", description: "Hypnotic spinning rat meme" },
+            { name: "Station 141", url: "https://ubg-reborn-eosin.vercel.app/games/station-141/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/station-141/75wxYs.png", description: "Space station survival horror" },
+            { name: "The Heist", url: "https://ubg-reborn-eosin.vercel.app/games/theheist/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/theheist/theheist.jpg", description: "Strategic bank robbery game" },
+            { name: "Zombs Royale", url: "https://ubg-reborn-eosin.vercel.app/games/zombs-royale/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/zombs-royale/zomb.png", description: "2D battle royale shooter" },
+            { name: "1", url: "https://ubg-reborn-eosin.vercel.app/games/1/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/1/meta/apple-touch-icon.png", description: "Minimalist puzzle platformer" },
+            { name: "10 minutes till dawn", url: "https://ubg-reborn-eosin.vercel.app/games/10-minutes-till-dawn/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/10-minutes-till-dawn/icon.png", description: "Survive until dawn in this shooter" },
+            { name: "100ng", url: "https://ubg-reborn-eosin.vercel.app/games/100ng/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/100ng/100ng-logo.png", description: "Fast-paced arcade action" },
+            { name: "2048 Multitask", url: "https://ubg-reborn-eosin.vercel.app/games/2048-multitask/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/2048-multitask/splash.png", description: "Multiple 2048 boards challenge" },
+            { name: "2048", url: "https://ubg-reborn-eosin.vercel.app/games/2048/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/2048/2048.png", description: "Classic number merging puzzle" },
+            { name: "99 balls", url: "https://ubg-reborn-eosin.vercel.app/games/99balls/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/99balls/99-balls-evo.jpg", description: "Ball-breaking physics puzzle" },
+            { name: "Doge Miner", url: "https://ubg-reborn-eosin.vercel.app/games/DogeMiner/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/DogeMiner/favicon.ico", description: "Mine cryptocurrency with doge" },
+            { name: "Offline Paradise", url: "https://ubg-reborn-eosin.vercel.app/games/OfflineParadise/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/OfflineParadise/assets/icon.jpeg", description: "Tropical island simulation" },
+            { name: "Run 2", url: "https://ubg-reborn-eosin.vercel.app/games/Run2/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/Run2/run-2-logo.jpg", description: "3D tunnel running adventure" },
+            { name: "Shape Shootout", url: "https://ubg-reborn-eosin.vercel.app/games/ShapeShootout/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/ShapeShootout/Icon.png", description: "Geometric shooting game" },
+            { name: "Stickman Survival", url: "https://ubg-reborn-eosin.vercel.app/games/Stickman-Survival/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/Stickman-Survival/Icon.png", description: "Stickman survival challenge" },
+            { name: "Achievement Unlocked", url: "https://ubg-reborn-eosin.vercel.app/games/achievementunlocked/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/achievementunlocked/achievementunlocked.png", description: "Meta achievement hunting game" },
+            { name: "Adrenaline Challenge", url: "https://ubg-reborn-eosin.vercel.app/games/adrenalinechallenge/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/adrenalinechallenge/adrenalinechallenge.jpg", description: "High-speed racing challenge" },
+            { name: "Adventure Drivers", url: "https://ubg-reborn-eosin.vercel.app/games/adventure-drivers/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/adventure-drivers/splash.png", description: "Off-road driving adventure" },
+            { name: "Alien Hominid", url: "https://ubg-reborn-eosin.vercel.app/games/alienhominid/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/alienhominid/alienhominid.jpg", description: "Alien side-scrolling shooter" },
+            { name: "Align 4", url: "https://ubg-reborn-eosin.vercel.app/games/align-4/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/align-4/align4.png", description: "Connect four strategy game" },
+            { name: "Amidst The Clouds", url: "https://ubg-reborn-eosin.vercel.app/games/amidst-the-clouds/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/amidst-the-clouds/splash.png", description: "Sky-high platforming adventure" },
+            { name: "Angel Under", url: "https://ubg-reborn-eosin.vercel.app/games/angelunder/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/angelunder/thumbnail.png", description: "Angelic puzzle adventure" },
+            { name: "Angry Sharks", url: "https://ubg-reborn-eosin.vercel.app/games/angry-sharks/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/angry-sharks/assets/favicon/icon-512x512.png", description: "Underwater shark rampage" },
+            { name: "Aquapark Slides", url: "https://ubg-reborn-eosin.vercel.app/games/aquapark-slides/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/aquapark-slides/splash.png", description: "Water slide racing fun" },
+            { name: "Backrooms 2D", url: "https://ubg-reborn-eosin.vercel.app/games/backrooms-2d/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/backrooms-2d/splash.png", description: "2D backrooms horror exploration" },
+            { name: "Backrooms", url: "https://ubg-reborn-eosin.vercel.app/games/backrooms/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/backrooms/img/splash.jpg", description: "Liminal space horror exploration" },
+            { name: "Bad Ice Cream", url: "https://ubg-reborn-eosin.vercel.app/games/bad-ice-cream/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bad-ice-cream/bad-ice-cream.png", description: "Ice cream maze collection game" },
+            { name: "BasketBros.io", url: "https://ubg-reborn-eosin.vercel.app/games/basketbros-io/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/basketbros-io/thumb.jpg", description: "Multiplayer basketball battles" },
+            { name: "Battle for Gondor", url: "https://ubg-reborn-eosin.vercel.app/games/battleforgondor/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/battleforgondor/battleforgondor.JPG", description: "Lord of the Rings strategy" },
+            { name: "Big Red Button", url: "https://ubg-reborn-eosin.vercel.app/games/bigredbutton/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bigredbutton/bigredbutton.png", description: "Don't press the red button" },
+            { name: "FNF", url: "https://ubg-reborn-eosin.vercel.app/games/fridaynightfunkin/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/fridaynightfunkin/fnf-icon.jpg", description: "Friday Night Funkin' rhythm game" },
+            { name: "Black Hole Square", url: "https://ubg-reborn-eosin.vercel.app/games/blacholesquare/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/blacholesquare/icon.png", description: "Physics-based black hole puzzle" },
+            { name: "Black Knight", url: "https://ubg-reborn-eosin.vercel.app/games/blackknight/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/blackknight/blackknight.png", description: "Medieval knight adventure" },
+            { name: "Blockpost", url: "https://ubg-reborn-eosin.vercel.app/games/blockpost/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/blockpost/thumb.png", description: "Multiplayer block shooter" },
+            { name: "Bloons TD", url: "https://ubg-reborn-eosin.vercel.app/games/bloonstd/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bloonstd/bloonstd.jpg", description: "Tower defense with balloons" },
+            { name: "Bloxors", url: "https://ubg-reborn-eosin.vercel.app/games/bloxors/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bloxors/favicon.ico", description: "Block-rolling puzzle game" },
+            { name: "BNTTS", url: "https://ubg-reborn-eosin.vercel.app/games/bntts/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bntts/icons/icon-256.png", description: "Bullet hell survival game" },
+            { name: "Bob The Robber 2", url: "https://ubg-reborn-eosin.vercel.app/games/bobtherobber2/index.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bobtherobber2/icons/splash.jpeg", description: "Stealth robbery adventure" },
+            { name: "Bonkio", url: "https://ubg-reborn-eosin.vercel.app/games/bonkio/bonkio.html", icon: "https://ubg-reborn-eosin.vercel.app/games/bonkio/image.png", description: "Physics-based multiplayer battles" },
+            { name: "Getting Over It", url: "https://ubg-reborn-eosin.vercel.app/games/getting-over-it.html", icon: "https://ubg-reborn-eosin.vercel.app/help.png", description: "Frustrating climbing challenge" },
+            { name: "Tanuki Sunset", url: "https://tomb-of-the-mask-online.github.io/source/class-488/", icon: "https://plant-health.vercel.app/proxy/https://i1.sndcdn.com/artworks-0G1uvaIrugo8bzVK-4aweIA-t500x500.jpg", description: "Retro skateboarding adventure" }
+        ];
+
+            function maintenanceListener(){
+              if (!window.firebase?.database) return;
+              const rtdb = firebase.database();
+              const ref = rtdb.ref('settings/maintenance');
+              let box;
+            
+              function ensureBox(){
+                if (box) return box;
+                box = document.createElement('div');
+                box.id = 'ps-maintenance';
+                box.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:999999;';
+                box.innerHTML = `
+                  <div style="background:#2a2a2a;border:1px solid #444;border-radius:10px;max-width:620px;width:92%;padding:1.25rem;font-family:JetBrains Mono,monospace;color:#ddd;text-align:center">
+                    <h2 style="color:#fff;margin:0 0 .5rem">Maintenance</h2>
+                    <p id="ps-maint-msg" style="margin:.5rem 0 1rem;color:#bbb"></p>
+                    <button id="ps-maint-dismiss" style="display:none;background:#333;color:#0f0;border:1px solid #444;padding:.6rem 1rem;border-radius:6px;cursor:pointer">dismiss</button>
+                  </div>`;
+                document.body.appendChild(box);
+                box.querySelector('#ps-maint-dismiss').addEventListener('click', ()=>{ box.style.display='none'; });
+                return box;
+              }
+
+              ref.on('value', snap => {
+                const s = snap.val() || {};
+                const active = !!(s.lockdownMode || s.maintenanceMode);
+                const dismissible = !!s.allowDismissal && !s.lockdownMode;
+                const msg = s.maintenanceMessage || 'We are performing maintenance. Please check back soon.';
+                const el = ensureBox();
+                el.querySelector('#ps-maint-msg').textContent = msg;
+                el.querySelector('#ps-maint-dismiss').style.display = dismissible ? '' : 'none';
+                el.style.display = active ? 'flex' : 'none';
+              });
+            }
+
+        class GameLibrary {
+            constructor() {
+                this.allGames = games;
+                this.filteredGames = games;
+                this.init();
+            }
+
+            init() {
+                this.setupSearch();
+                this.renderGames();
+                this.updateGameCount();
+            }
+
+            setupSearch() {
+                const searchInput = document.getElementById('searchInput');
+                searchInput.addEventListener('input', (e) => {
+                    this.filterGames(e.target.value);
+                });
+            }
+
+            filterGames(searchTerm) {
+                const term = searchTerm.toLowerCase().trim();
+                
+                if (!term) {
+                    this.filteredGames = this.allGames;
+                } else {
+                    this.filteredGames = this.allGames.filter(game => 
+                        game.name.toLowerCase().includes(term) ||
+                        (game.description && game.description.toLowerCase().includes(term))
+                    );
+                }
+
+                this.renderGames();
+                this.updateGameCount();
+            }
+            
+            renderGames() {
+                const gamesGrid = document.getElementById('gamesGrid');
+                const noResults = document.getElementById('noResults');
+
+                if (this.filteredGames.length === 0) {
+                    gamesGrid.style.display = 'none';
+                    noResults.style.display = 'block';
+                    return;
+                }
+
+                gamesGrid.style.display = 'grid';
+                noResults.style.display = 'none';
+
+                gamesGrid.innerHTML = this.filteredGames.map(game => `
+                    <div class="game-card" onclick="playGame('${game.url}', '${game.name}')">
+                        <div class="game-image">
+                            <img src="${game.icon}" alt="${game.name}" onerror="this.parentElement.innerHTML='<i class=\\'bx bx-joystick\\'></i>'">
+                        </div>
+                        <div class="game-info">
+                            <h3 class="game-title">${game.name}</h3>
+                            <p class="game-description">${game.description || 'No description available'}</p>
+                            <div class="game-actions">
+                                <a href="play.html?game=${encodeURIComponent(game.url)}&url=${encodeURIComponent(game.url)}&name=${encodeURIComponent(game.name)}" class="play-btn">
+                                    <i class='bx bx-play'></i> play
+                                </a>
+                                <button class="report-btn" onclick="event.stopPropagation(); reportGame('${game.name}')">
+                                    <i class='bx bx-flag'></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateGameCount() {
+                const gamesCount = document.getElementById('gamesCount');
+                gamesCount.textContent = this.filteredGames.length;
+            }
+        }
+
+        const gameLibrary = new GameLibrary();
+
+        function playGame(url, name) {
+            window.location.href = `play.html?game=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`;
+        }
+
+        function reportGame(gameName) {
+            const reason = prompt(`Report "${gameName}" for:\n\n1. Inappropriate content\n2. Broken/not working\n3. Copyright violation\n4. Other\n\nEnter reason number (1-4):`);
+            
+            if (reason && ['1', '2', '3', '4'].includes(reason)) {
+                const reasons = {
+                    '1': 'Inappropriate content',
+                    '2': 'Broken/not working', 
+                    '3': 'Copyright violation',
+                    '4': 'Other'
+                };
+                
+                const description = prompt('Additional details (optional):');
+                
+                alert(`Thank you for reporting "${gameName}" for: ${reasons[reason]}`);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuBtn = document.querySelector('.mobile-menu-btn i');
+            
+            mobileMenu.classList.toggle('active');
+            
+            if (mobileMenu.classList.contains('active')) {
+                menuBtn.className = 'bx bx-x';
+            } else {
+                menuBtn.className = 'bx bx-menu';
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const navbar = document.querySelector('.navbar');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (!navbar.contains(event.target) && mobileMenu.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
+
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+                document.title = "Dashboard";
+                document.getElementById("favicon").href = "https://s3.amazonaws.com/cdn.app.cte.virginia.edu/tools/images/XmeGg2PHFfRHaj3upWvncc2gmaG91fApdtDC8bdU.png";
+            } else {
+                document.title = "Polar's Shack";
+                document.getElementById("favicon").href = "../logo.png";
+            }
+        });
+
+        const maintenanceScript = document.createElement('script');
+        maintenanceScript.src = '../maintenance-mode.js';
+        document.head.appendChild(maintenanceScript);
+    </script>
+</body>
+</html>
